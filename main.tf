@@ -1,21 +1,21 @@
-terraform { 
-  required_providers { 
-    aws = { 
-      source  = "hashicorp/aws" 
-    } 
-  } 
-} 
- 
-provider "aws" { 
-  region = "ap-south-1" 
-} 
- 
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
 # ---------------------------------------------------------
 # Primary Bucket Configuration
 # ---------------------------------------------------------
-resource "aws_s3_bucket" "lab_bucket" { 
-  bucket = "terraform-iac-security" 
-} 
+resource "aws_s3_bucket" "lab_bucket" {
+  bucket = "terraform-iac-security"
+}
 
 # 1. Block Public Access (Secure by Default)
 resource "aws_s3_bucket_public_access_block" "lab_bucket_pab" {
@@ -44,13 +44,13 @@ resource "aws_s3_bucket_policy" "lab_bucket_policy" {
 
 data "aws_iam_policy_document" "require_https" {
   statement {
-    sid       = "AllowSSLRequestsOnly"
-    effect    = "Deny"
+    sid    = "AllowSSLRequestsOnly"
+    effect = "Deny"
     principals {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.lab_bucket.arn,
       "${aws_s3_bucket.lab_bucket.arn}/*",
@@ -74,7 +74,7 @@ resource "aws_s3_bucket_logging" "lab_bucket_logging" {
 # ---------------------------------------------------------
 # Logging Bucket Configuration
 # ---------------------------------------------------------
-resource "aws_s3_bucket" "log_bucket" {
+resource "aws_s3_bucket" "log_bucket" { # NOSONAR - Intentionally not logging the log destination bucket to prevent recursive logging loops
   bucket = "terraform-iac-security-logs"
 }
 
@@ -103,13 +103,13 @@ resource "aws_s3_bucket_policy" "log_bucket_policy" {
 
 data "aws_iam_policy_document" "log_bucket_require_https" {
   statement {
-    sid       = "AllowSSLRequestsOnly"
-    effect    = "Deny"
+    sid    = "AllowSSLRequestsOnly"
+    effect = "Deny"
     principals {
       type        = "*"
       identifiers = ["*"]
     }
-    actions   = ["s3:*"]
+    actions = ["s3:*"]
     resources = [
       aws_s3_bucket.log_bucket.arn,
       "${aws_s3_bucket.log_bucket.arn}/*",
@@ -132,6 +132,6 @@ resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
 
 resource "aws_s3_bucket_acl" "log_bucket_acl" {
   depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
+  bucket     = aws_s3_bucket.log_bucket.id
+  acl        = "log-delivery-write"
 }
